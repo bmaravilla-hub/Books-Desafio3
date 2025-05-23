@@ -97,5 +97,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 });
-
 export default App;
