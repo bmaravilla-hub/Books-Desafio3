@@ -22,5 +22,4 @@ const MainStack = () => (
     <Stack.Screen name="AddEditBook" component={AddEditBookScreen} options={{ title: 'Agregar / Editar Libro' }} />
   </Stack.Navigator>
 );
-
 export default { AuthStack, MainStack };
