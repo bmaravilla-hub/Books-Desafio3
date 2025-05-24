@@ -41,4 +41,4 @@ Desafío Práctico 3
 
 1. Clonar el repositorio  
    ```bash
-   git clone <url-del-repositorio>
+   git clone <https://github.com/bmaravilla-hub/Books-Desafio3>
