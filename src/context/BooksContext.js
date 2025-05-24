@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect } from 'react';
-
 const booksData = require('../../assets/books.json');
 
 export const BooksContext = createContext();
