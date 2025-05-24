@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "title": "El Quijote",
+    "author": "Miguel de Cervantes",
+    "status": "completado",
+    "startDate": "2023-01-01",
+    "endDate": "2023-01-10",
+    "comment": "Un clásico"
+  },
+  {
+    "id": "2",
+    "title": "1984",
+    "author": "George Orwell",
+    "status": "leyendo",
+    "startDate": "2023-04-01",
+    "endDate": "",
+    "comment": "Muy interesante"
+  },
+  {
+    "id": "3",
+    "title": "Cien años de soledad",
+    "author": "Gabriel García Márquez",
+    "status": "por leer",
+    "startDate": "",
+    "endDate": "",
+    "comment": ""
+  },
+  {
+    "id": "4",
+    "title": "El Principito",
+    "author": "Antoine de Saint-Exupéry",
+    "status": "completado",
+    "startDate": "2023-02-15",
+    "endDate": "2023-02-20",
+    "comment": "Libro muy bonito y profundo"
+  },
+  {
+    "id": "5",
+    "title": "La sombra del viento",
+    "author": "Carlos Ruiz Zafón",
+    "status": "leyendo",
+    "startDate": "2023-05-01",
+    "endDate": "",
+    "comment": "Me tiene enganchado"
+  }
+]
