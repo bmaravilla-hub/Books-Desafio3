@@ -39,6 +39,6 @@ Desafío Práctico 3
 
 ## Instalación y uso
 
-1. Clona el repositorio  
+1. Clonar el repositorio  
    ```bash
    git clone <https://github.com/bmaravilla-hub/Books-Desafio3>

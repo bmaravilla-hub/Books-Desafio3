@@ -1,24 +1,24 @@
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfLQiHXCmBRUPYbOmxzMtUfs03tZW2Fm0",
-  authDomain: "books-cce06.firebaseapp.com",
-  projectId: "books-cce06",
-  storageBucket: "books-cce06.firebasestorage.app",
-  messagingSenderId: "686166743276",
-  appId: "1:686166743276:web:89a0b114e540e939486dc9",
-  measurementId: "G-ZTL06VY1H2"
+  apiKey: "AIzaSyB9DiHH-ywebm4EIz6Dyw472dFxbYEP0CE",
+  authDomain: "books-desafio3-eff7b.firebaseapp.com",
+  projectId: "books-desafio3-eff7b",
+  storageBucket: "books-desafio3-eff7b.firebasestorage.app",
+  messagingSenderId: "548775027275",
+  appId: "1:548775027275:web:932b5e47cb584a25cea3ce"
 };
 
-const app = initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+export const auth = firebase.auth();
+export const db = firebase.firestore();
+export const storage = firebase.storage();
+export const firebaseTimestamp = firebase.firestore.FieldValue.serverTimestamp();
 
-const db = getFirestore(app);
-
-export { auth, db };
+export default firebase;

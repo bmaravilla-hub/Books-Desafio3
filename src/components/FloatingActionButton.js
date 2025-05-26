@@ -1,30 +1,33 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
 
-export default function FloatingActionButton({ onPress }) {
+const FloatingActionButton = ({ onPress, icon }) => {
   return (
-    <TouchableOpacity style={styles.fab} onPress={onPress}>
-      <Text style={styles.text}>+</Text>
+    <TouchableOpacity style={styles.button} onPress={onPress}>
+      <MaterialIcons name={icon} size={24} color={colors.white} />
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  fab: {
+  button: {
     position: 'absolute',
-    right: 20,
-    bottom: 30,
-    backgroundColor: '#007AFF',
     width: 56,
     height: 56,
     borderRadius: 28,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-  },
-  text: {
-    color: '#fff',
-    fontSize: 30,
-    lineHeight: 30,
+    bottom: 20,
+    right: 20,
+    elevation: 4,
+    shadowColor: colors.lavenderDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
+
+export default FloatingActionButton;

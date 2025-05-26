@@ -1,37 +1,36 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getLoggedInUser } from './auth';
+import { db } from '../utils/firebase';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { auth } from '../utils/firebase';
 
-export async function getBooks() {
-  const user = await getLoggedInUser();
-  if (!user) return [];
-
-  const booksJson = await AsyncStorage.getItem(`books_${user.email}`);
-  return booksJson ? JSON.parse(booksJson) : [];
-}
-
-export async function saveBook(book) {
-  const user = await getLoggedInUser();
-  if (!user) throw new Error('Usuario no autenticado');
-
-  const books = await getBooks();
-
-  if (book.id) {
-    const index = books.findIndex(b => b.id === book.id);
-    if (index !== -1) books[index] = book;
-  } else {
-    book.id = Date.now().toString();
-    books.push(book);
+export const addBook = async (bookData) => {
+  try {
+    const bookWithUser = {
+      ...bookData,
+      userId: auth.currentUser.uid,
+      createdAt: new Date(),
+    };
+    
+    const docRef = await addDoc(collection(db, 'books'), bookWithUser);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    return { success: false, error: 'Error al agregar libro' };
   }
+};
 
-  await AsyncStorage.setItem(`books_${user.email}`, JSON.stringify(books));
-}
+export const updateBook = async (bookId, bookData) => {
+  try {
+    await updateDoc(doc(db, 'books', bookId), bookData);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Error al actualizar libro' };
+  }
+};
 
-export async function deleteBook(id) {
-  const user = await getLoggedInUser();
-  if (!user) throw new Error('Usuario no autenticado');
-
-  let books = await getBooks();
-  books = books.filter(b => b.id !== id);
-
-  await AsyncStorage.setItem(`books_${user.email}`, JSON.stringify(books));
-}
+export const deleteBook = async (bookId) => {
+  try {
+    await deleteDoc(doc(db, 'books', bookId));
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Error al eliminar libro' };
+  }
+};

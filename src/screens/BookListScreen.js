@@ -1,141 +1,204 @@
-import React, { useContext } from 'react';
-import { View, FlatList, Text, TouchableOpacity, Alert, StyleSheet, } from 'react-native';
-import { BooksContext } from '../context/BooksContext';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { auth, db } from '../utils/firebase';
+import { signOut } from 'firebase/auth'; 
+import BookCard from '../components/BookCard';
+import FloatingActionButton from '../components/FloatingActionButton';
+import { colors } from '../theme/colors';
 
-export default function BookListScreen({ navigation }) {
-  const { books, deleteBook } = useContext(BooksContext);
-  const { logout } = useContext(AuthContext);
+const BookListScreen = ({ navigation }) => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('todos');
 
-  const onDelete = (id) => {
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    const q = query(
+      collection(db, 'books'),
+      where('userId', '==', auth.currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const booksData = [];
+      querySnapshot.forEach((doc) => {
+        booksData.push({ id: doc.id, ...doc.data() });
+      });
+      setBooks(booksData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <MaterialIcons name="logout" size={24} color={colors.lavenderDark} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
+  const handleLogout = () => {
     Alert.alert(
-      'Eliminar libro',
-      '¿Estás seguro que quieres eliminar este libro?',
+      'Cerrar sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => deleteBook(id) },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut(auth);
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo cerrar sesión. Inténtalo de nuevo.');
+            }
+          },
+        },
       ]
     );
   };
 
+  const filteredBooks = filter === 'todos' 
+    ? books 
+    : books.filter(book => book.status === filter);
+
+  const renderBookItem = ({ item }) => (
+    <BookCard 
+      book={item} 
+      onPress={() => navigation.navigate('BookDetail', { bookId: item.id })}
+    />
+  );
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => logout()} style={styles.logoutButton}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-
-      <FlatList
-        data={books}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('BookDetail', { book: item })}
-            style={styles.bookItem}
+      <View style={styles.header}>
+        <Text style={styles.title}>Mi Biblioteca</Text>
+        <View style={styles.filterContainer}>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'todos' && styles.activeFilter]}
+            onPress={() => setFilter('todos')}
           >
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.author}>{item.author}</Text>
-            <Text style={styles.status}>Estado: {item.status}</Text>
-
-            <View style={styles.actions}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => onDelete(item.id)}
-              >
-                <Text style={styles.actionText}>Eliminar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.editButton]}
-                onPress={() =>
-                  navigation.navigate('AddEditBook', { add: false, book: item })
-                }
-              >
-                <Text style={styles.actionText}>Editar</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.filterText, filter === 'todos' && styles.activeFilterText]}>Todos</Text>
           </TouchableOpacity>
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'por leer' && styles.activeFilter]}
+            onPress={() => setFilter('por leer')}
+          >
+            <Text style={[styles.filterText, filter === 'por leer' && styles.activeFilterText]}>Por leer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'leyendo' && styles.activeFilter]}
+            onPress={() => setFilter('leyendo')}
+          >
+            <Text style={[styles.filterText, filter === 'leyendo' && styles.activeFilterText]}>Leyendo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'completado' && styles.activeFilter]}
+            onPress={() => setFilter('completado')}
+          >
+            <Text style={[styles.filterText, filter === 'completado' && styles.activeFilterText]}>Completados</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddEditBook', { add: true })}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.lavenderDark} />
+        </View>
+      ) : filteredBooks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="menu-book" size={60} color={colors.lavenderLight} />
+          <Text style={styles.emptyText}>No hay libros en esta categoría</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredBooks}
+          renderItem={renderBookItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
+
+      <FloatingActionButton 
+        onPress={() => navigation.navigate('AddBook')}
+        icon="add"
+      />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2E0854',
-    padding: 10,
+    backgroundColor: colors.background,
   },
-  logoutButton: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#A64AC9',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  logoutText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  bookItem: {
-    backgroundColor: '#F3E5F5',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
+  header: {
+    padding: 20,
+    paddingBottom: 10,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lavenderLight,
   },
   title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    fontSize: 18,
-    color: '#4A0072',
+    color: colors.lavenderDark,
+    marginBottom: 15,
   },
-  author: {
-    fontSize: 14,
-    color: '#333',
-  },
-  status: {
-    marginTop: 5,
-    fontStyle: 'italic',
-    color: '#6A1B9A',
-  },
-  actions: {
+  filterContainer: {
     flexDirection: 'row',
-    marginTop: 10,
     justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  actionButton: {
-    backgroundColor: '#BA68C8',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+  filterButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.lavenderLight,
   },
-  editButton: {
-    backgroundColor: '#CE93D8',
+  activeFilter: {
+    backgroundColor: colors.lavenderDark,
+    borderColor: colors.lavenderDark,
   },
-  actionText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  filterText: {
+    fontSize: 12,
+    color: colors.lavenderDark,
   },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#7B1FA2',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  activeFilterText: {
+    color: colors.white,
+  },
+  listContent: {
+    paddingBottom: 80,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fabText: {
-    fontSize: 32,
-    color: 'white',
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  logoutButton: {
+    marginRight: 15,
   },
 });
+
+export default BookListScreen;
