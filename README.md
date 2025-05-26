@@ -17,7 +17,7 @@ Diseño y Programación de Software Multiplataforma
 ---
 
 ## Actividad
-Desafío Práctico 3
+Desafío Práctico 3 - Books App
 
 ---
 
